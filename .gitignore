@@ -1,0 +1,40 @@
+# build output
+dist/
+.output/
+
+# dependencies
+node_modules/
+
+# generated types
+.astro/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# environment
+.env
+.env.*
+!.env.example
+
+# secrets / keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# npm / yarn configs
+.npmrc
+.yarnrc.yml
+
+# macOS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# deploy platforms
+.vercel/
+.netlify/
+.wrangler/

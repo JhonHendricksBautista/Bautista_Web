@@ -1,0 +1,68 @@
+---
+import { site } from '@/data/site';
+---
+
+<section id="contact" class="section-shell scroll-mt-24 py-16 md:py-24">
+  <div class="border-t border-line pt-10">
+    <h2 class="font-mono text-sm text-muted">Contact</h2>
+
+    <p class="mt-6 max-w-2xl text-2xl font-medium leading-snug tracking-tight text-ink md:text-3xl">
+      Open to internships, student collaborations, and anything that sits between
+      silicon and software.
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <a
+        href={`mailto:${site.email}`}
+        class="font-mono text-sm text-blue underline decoration-blue/40 underline-offset-4 transition-colors hover:decoration-blue"
+      >
+        {site.email}
+      </a>
+
+      <button
+        type="button"
+        data-copy={site.email}
+        class="rounded border border-line px-3 py-1.5 text-sm text-ink transition-colors hover:border-blue hover:text-blue"
+      >
+        Copy email
+      </button>
+    </div>
+
+    <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2">
+      {
+        site.socials.map((social) => (
+          <li>
+            <a
+              href={social.href}
+              class="text-sm text-muted transition-colors hover:text-blue"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {social.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-copy]');
+  const value = button?.dataset.copy;
+
+  if (button && value) {
+    const original = button.textContent;
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(value);
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = value;
+      }
+      window.setTimeout(() => {
+        button.textContent = original;
+      }, 1600);
+    });
+  }
+</script>

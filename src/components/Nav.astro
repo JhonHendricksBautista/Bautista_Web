@@ -1,0 +1,125 @@
+---
+import { nav, site } from '@/data/site';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<header
+  data-nav
+  class="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur"
+>
+  <div class="section-shell flex h-16 items-center justify-between gap-6">
+    <a
+      href={base}
+      class="font-mono text-sm font-medium tracking-tight text-ink transition-colors hover:text-blue"
+    >
+      {site.shortName}
+    </a>
+
+    <nav class="hidden items-center gap-1 md:flex" aria-label="Sections">
+      {
+        nav.map((item) => (
+          <a
+            href={`#${item.id}`}
+            data-nav-link={item.id}
+            class="rounded px-3 py-2 text-sm text-muted transition-colors hover:text-ink aria-[current=true]:text-blue"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="hidden md:block">
+      <a
+        href={`${base}/resume.pdf`}
+        class="rounded border border-line px-3 py-1.5 text-sm text-ink transition-colors hover:border-blue hover:text-blue"
+      >
+        Resume
+      </a>
+    </div>
+
+    <button
+      type="button"
+      data-nav-toggle
+      class="inline-flex items-center gap-2 rounded border border-line px-3 py-1.5 text-sm text-ink md:hidden"
+      aria-expanded="false"
+      aria-controls="mobile-nav"
+    >
+      Menu
+    </button>
+  </div>
+
+  <nav
+    id="mobile-nav"
+    data-mobile-nav
+    hidden
+    class="border-t border-line bg-surface md:hidden"
+    aria-label="Sections"
+  >
+    <div class="section-shell flex flex-col py-2">
+      {
+        nav.map((item) => (
+          <a
+            href={`#${item.id}`}
+            data-nav-link={item.id}
+            class="rounded px-1 py-3 text-sm text-muted transition-colors hover:text-ink aria-[current=true]:text-blue"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+      <a href={`${base}/resume.pdf`} class="px-1 py-3 text-sm text-ink">Resume</a>
+    </div>
+  </nav>
+</header>
+
+<script>
+  // Mobile menu toggle.
+  const toggle = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const mobileNav = document.querySelector<HTMLElement>('[data-mobile-nav]');
+
+  if (toggle && mobileNav) {
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      mobileNav.hidden = !open;
+      toggle.textContent = open ? 'Close' : 'Menu';
+    };
+
+    toggle.addEventListener('click', () => {
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    mobileNav.addEventListener('click', (event) => {
+      if ((event.target as HTMLElement).closest('a')) setOpen(false);
+    });
+  }
+
+  // Highlight the section currently in view.
+  const links = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'),
+  );
+  const sections = links
+    .map((link) => document.getElementById(link.dataset.navLink ?? ''))
+    .filter((el): el is HTMLElement => el !== null);
+
+  if (sections.length > 0) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = entry.target.id;
+          for (const link of links) {
+            link.setAttribute(
+              'aria-current',
+              String(link.dataset.navLink === id),
+            );
+          }
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px', threshold: 0 },
+    );
+
+    for (const section of sections) observer.observe(section);
+  }
+</script>

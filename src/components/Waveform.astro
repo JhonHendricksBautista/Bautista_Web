@@ -1,0 +1,119 @@
+---
+// The single bold element of the page: a signal trace that behaves like a
+// scope probe. The pointer raises the local amplitude where it hovers; with no
+// input the trace drifts on its own. It freezes to a static waveform when the
+// visitor prefers reduced motion.
+---
+
+<div class="waveform" data-waveform>
+  <svg
+    viewBox="0 0 1000 180"
+    preserveAspectRatio="none"
+    role="img"
+    aria-label="Decorative signal waveform"
+    class="h-full w-full"
+  >
+    <line x1="0" y1="90" x2="1000" y2="90" stroke="var(--color-line)" stroke-width="1" />
+    <path
+      data-trace
+      d="M0 90 L1000 90"
+      fill="none"
+      stroke="var(--color-trace)"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-waveform]');
+  const trace = root?.querySelector<SVGPathElement>('[data-trace]');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (root && trace) {
+    const W = 1000;
+    const H = 180;
+    const MID = H / 2;
+    const SAMPLES = 140;
+
+    // Pointer position in viewBox space; null when the pointer is away.
+    let pointerX: number | null = null;
+    let pointerStrength = 0;
+
+    const point = (t: number, phase: number) => {
+      const base =
+        Math.sin(t * Math.PI * 6 + phase) * 14 +
+        Math.sin(t * Math.PI * 13 + phase * 0.6) * 6;
+
+      let amplitude = 1;
+      if (pointerX !== null) {
+        const sigma = 130;
+        const d = t * W - pointerX;
+        const bump = Math.exp(-(d * d) / (2 * sigma * sigma));
+        amplitude = 1 + bump * pointerStrength * 2.6;
+      }
+      return MID + base * amplitude;
+    };
+
+    const draw = (phase: number) => {
+      let d = '';
+      for (let i = 0; i <= SAMPLES; i++) {
+        const t = i / SAMPLES;
+        const x = t * W;
+        const y = point(t, phase);
+        d += `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`;
+      }
+      trace.setAttribute('d', d);
+    };
+
+    if (reduced) {
+      draw(0);
+    } else {
+      let running = true;
+      let phase = 0;
+
+      const onPointerMove = (event: PointerEvent) => {
+        const rect = root.getBoundingClientRect();
+        const ratio = (event.clientX - rect.left) / rect.width;
+        pointerX = ratio * W;
+        pointerStrength = Math.min(1, Math.max(0, pointerStrength + 0.12));
+      };
+
+      const onPointerLeave = () => {
+        pointerX = null;
+      };
+
+      root.addEventListener('pointermove', onPointerMove);
+      root.addEventListener('pointerleave', onPointerLeave);
+
+      // Only animate while the hero is on screen.
+      const observer = new IntersectionObserver(
+        (entries) => {
+          running = entries[0]?.isIntersecting ?? true;
+        },
+        { threshold: 0 },
+      );
+      observer.observe(root);
+
+      const tick = () => {
+        if (running) {
+          phase += 0.02;
+          pointerStrength *= 0.94;
+          draw(phase);
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+</script>
+
+<style>
+  .waveform {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1000 / 180;
+    touch-action: pan-y;
+  }
+</style>
